@@ -1,148 +1,92 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+from Eliminador import Eliminador
 
-class RutaSelector:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Creación de estimados Rolling")
-        self.root.state('zoomed')
-        self.root.configure(bg="#f9f9f9")
+def seleccionar_archivo():
+    archivo = filedialog.askopenfilename(title="Seleccionar Archivo CDL",
+                                         filetypes=[("Archivos Excel", "*.xlsx")])
+    if archivo:
+        entry_cdl.delete(0, tk.END)
+        entry_cdl.insert(0, archivo)
 
-        self.rutas = {}
-        self.valores = {}
+def ejecutar_funcion_Inicio():
+    ruta_cdl = entry_cdl.get().strip()
+    inicio_corp = entry_inicio_corp.get().strip()
+    inicio_pr = entry_inicio_pr.get().strip()
+    fin_carga = entry_fin_carga.get().strip()
 
-        # ---------- Título principal ----------
-        titulo = tk.Label(
-            self.root,
-            text="Creación de estimados Rolling",
-            fg="#FF69B4",
-            bg="#f9f9f9",
-            font=("Segoe UI", 32, "bold")
-        )
-        titulo.pack(pady=40)
+    if not ruta_cdl or not inicio_corp or not inicio_pr or not fin_carga:
+        messagebox.showwarning("Advertencia", "Todos los campos deben estar llenos antes de iniciar la eliminación.")
+        return
+    if not inicio_corp.isdigit() or not inicio_pr.isdigit() or not fin_carga.isdigit():
+        messagebox.showerror("Error", "Los valores de inicio Rolling Corporativo, Inicio Rolling PR y Fin Carga Rolling deben ser números.")
+        return
+    
+    C(ruta_cdl, inicio_corp, inicio_pr, fin_carga)
 
-        # ---------- Contenedor principal ----------
-        frame_contenido = tk.Frame(self.root, bg="#f9f9f9")
-        frame_contenido.pack(pady=10, padx=20, fill="both", expand=True)
+def C(ruta_cdl, inicio_corp, inicio_pr, fin_carga):
+    """Ejemplo de función que procesa los datos"""
+    messagebox.showinfo("Ejecución", f"Ejecutando función C con:\n\n"
+                                     f"Ruta CDL: {ruta_cdl}\n"
+                                     f"Inicio Rolling Corporativo: {inicio_corp}\n"
+                                     f"Inicio Rolling PR: {inicio_pr}\n"
+                                     f"Fin Carga Rolling: {fin_carga}")
+    E= Eliminador(ruta_cdl,inicio_corp,inicio_pr,fin_carga)
 
-        # ---------- Archivos ----------
-        frame_archivos = tk.LabelFrame(
-            frame_contenido,
-            text="Archivos",
-            font=("Segoe UI", 14, "bold"),
-            bg="#ffffff",
-            padx=20,
-            pady=20
-        )
-        frame_archivos.pack(fill="x", pady=10)
+# Valores iniciales
+inicioRollingCorporativo = ""
+inicioRollingPR = ""
+FinCargaRolling = ""
 
-        campos_archivos = [
-            ("RutaArchivoGlobal", "Archivo Global"),
-            ("RutaArchivoCDL", "Archivo CDL"),
-            ("RutaArchivoCrecimientos", "Archivo Crecimientos"),
-            ("RutaArchivoVentaHistorica", "Venta Histórica"),
-            ("RutaMacrosNovoApp", "Macros NovoApp"),
-            ("RutaMacrosRolling", "Macros Rolling Forecast")
-        ]
+# Crear la ventana
+root = tk.Tk()
+root.title("Eliminación de Estimados Rolling")
+root.geometry("700x400")  # ⬆ Aumentar resolución para mejor visibilidad
+root.config(bg="white")
 
-        for clave, etiqueta in campos_archivos:
-            self.crear_campo_archivo(frame_archivos, clave, etiqueta)
+# Panel rosa (Encabezado)
+panel_titulo = tk.Frame(root, bg="#A6269D", height=60)
+panel_titulo.pack(fill="x")
 
-        # ---------- Variables ----------
-        frame_variables = tk.LabelFrame(
-            frame_contenido,
-            text="Variables",
-            font=("Segoe UI", 14, "bold"),
-            bg="#ffffff",
-            padx=20,
-            pady=20
-        )
-        frame_variables.pack(fill="x", pady=10)
+titulo_label = tk.Label(panel_titulo, text="Eliminación de Estimados Rolling",
+                        font=("Arial", 16, "bold"), bg="#A6269D", fg="black")
+titulo_label.pack(pady=15)
 
-        campos_texto = [
-            ("InicioRollingCORP", "Inicio Rolling CORP"),
-            ("InicioRollingPR", "Inicio Rolling PR"),
-            ("AñoFinRolling", "Año Fin Rolling"),
-            ("TipoEstimado", "Tipo Estimado")
-        ]
+# Contenedor principal
+frame_contenido = tk.Frame(root, bg="white")
+frame_contenido.pack(pady=20, padx=20, fill="both", expand=True)
 
-        for clave, etiqueta in campos_texto:
-            self.crear_campo_texto(frame_variables, clave, etiqueta)
+# Configurar columnas para que se expandan con la ventana
+frame_contenido.columnconfigure(1, weight=1)
 
-        # ---------- Botones ----------
-        # Usamos pack() para apilarlos uno debajo del otro
-        self.crear_boton("Imprimir valores", self.mostrar_valores)
-        self.crear_boton("Guardar configuración", self.guardar_configuracion)
+# Etiquetas y Entradas
+tk.Label(frame_contenido, text="Ruta CDL:", bg="white", font=("Arial", 12)).grid(row=0, column=0, sticky="w", padx=10, pady=10)
+entry_cdl = tk.Entry(frame_contenido, width=60, font=("Arial", 12))
+entry_cdl.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
 
-    def crear_boton(self, texto, comando):
-        boton = tk.Button(
-            self.root,
-            text=texto,
-            command=comando,
-            bg="#FF69B4",
-            fg="white",
-            font=("Segoe UI", 14, "bold"),
-            padx=20,
-            pady=10
-        )
-        boton.pack(pady=10, fill="x")
+btn_archivo = tk.Button(frame_contenido, text="Buscar Archivo", command=seleccionar_archivo, 
+                        bg="#A6269D", fg="black", font=("Arial", 12, "bold"), width=15)
+btn_archivo.grid(row=0, column=2, padx=10, pady=10)
 
-    def crear_campo_archivo(self, parent, nombre, texto):
-        frame = tk.Frame(parent, bg="#ffffff")
-        frame.pack(fill="x", pady=10)
+tk.Label(frame_contenido, text="Inicio Rolling Corporativo:", bg="white", font=("Arial", 12)).grid(row=1, column=0, sticky="w", padx=10, pady=10)
+entry_inicio_corp = tk.Entry(frame_contenido, width=20, font=("Arial", 12))
+entry_inicio_corp.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+entry_inicio_corp.insert(0, str(inicioRollingCorporativo))
 
-        tk.Label(
-            frame, text=texto + ":", bg="#ffffff",
-            font=("Segoe UI", 12)
-        ).pack(side="left", padx=10)
+tk.Label(frame_contenido, text="Inicio Rolling PR:", bg="white", font=("Arial", 12)).grid(row=2, column=0, sticky="w", padx=10, pady=10)
+entry_inicio_pr = tk.Entry(frame_contenido, width=20, font=("Arial", 12))
+entry_inicio_pr.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
+entry_inicio_pr.insert(0, str(inicioRollingPR))
 
-        btn = tk.Button(
-            frame, text="Buscar", command=lambda: self.seleccionar_archivo(nombre),
-            font=("Segoe UI", 12)
-        )
-        btn.pack(side="left", padx=5)
+tk.Label(frame_contenido, text="Fin Carga Rolling:", bg="white", font=("Arial", 12)).grid(row=3, column=0, sticky="w", padx=10, pady=10)
+entry_fin_carga = tk.Entry(frame_contenido, width=20, font=("Arial", 12))
+entry_fin_carga.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
+entry_fin_carga.insert(0, str(FinCargaRolling))
 
-        lbl = tk.Label(
-            frame, text="No seleccionado", bg="#ffffff",
-            anchor="w", width=100, font=("Segoe UI", 12)
-        )
-        lbl.pack(side="left", padx=10)
-        self.rutas[nombre] = {"ruta": "", "label": lbl}
+# Botón para ejecutar la función C
+btn_ejecutar = tk.Button(root, text="Ejecutar Función", command=ejecutar_funcion_Inicio, 
+                         bg="#A6269D", fg="black", font=("Arial", 12, "bold"), width=20, height=2)
+btn_ejecutar.pack(pady=20)
 
-    def crear_campo_texto(self, parent, nombre, texto):
-        frame = tk.Frame(parent, bg="#ffffff")
-        frame.pack(fill="x", pady=10)
-
-        tk.Label(
-            frame, text=texto + ":", bg="#ffffff",
-            font=("Segoe UI", 12)
-        ).pack(side="left", padx=10)
-
-        entrada = tk.Entry(frame, width=50, font=("Segoe UI", 12))
-        entrada.pack(side="left", padx=10)
-        self.valores[nombre] = entrada
-
-    def seleccionar_archivo(self, nombre):
-        ruta = filedialog.askopenfilename()
-        if ruta:
-            self.rutas[nombre]["ruta"] = ruta
-            self.rutas[nombre]["label"].config(text=ruta)
-
-    def mostrar_valores(self):
-        print("---- Rutas de archivos ----")
-        for clave, valor in self.rutas.items():
-            print(f"{clave} = {valor['ruta']}")
-
-        print("\n---- Valores de entrada ----")
-        for clave, entrada in self.valores.items():
-            print(f"{clave} = {entrada.get()}")
-
-    def guardar_configuracion(self):
-        # Puedes agregar el código para guardar la configuración en un archivo .json o .xlsx
-        print("Configuración guardada")
-
-# Ejecutar interfaz
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = RutaSelector(root)
-    root.mainloop()
+# Ejecutar la ventana
+root.mainloop()
